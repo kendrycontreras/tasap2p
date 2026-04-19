@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasa P2P Binance</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --binance-yellow: #F3BA2F;
+            --binance-black: #0B0E11;
+            --binance-gray: #1E2329;
+            --binance-text-gray: #848E9C;
+            --binance-white: #EAECEF;
+            --binance-green: #02C076;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--binance-black);
+            color: var(--binance-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--binance-gray);
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Header con contador */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            font-size: 0.85rem;
+            color: var(--binance-yellow);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .timer {
+            font-size: 0.75rem;
+            color: var(--binance-text-gray);
+            background: rgba(255,255,255,0.05);
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        /* Tasa Protagonista */
+        .tasa-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tasa-label {
+            color: var(--binance-text-gray);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .tasa-value {
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: var(--binance-white);
+            line-height: 1;
+        }
+
+        .tasa-unit {
+            font-size: 1rem;
+            color: var(--binance-text-gray);
+            margin-left: 5px;
+        }
+
+        /* Total 3$ Secundario */
+        .total-box {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .total-info .total-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--binance-text-gray);
+            text-transform: uppercase;
+        }
+
+        .total-info .total-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--binance-green);
+        }
+
+        .usd-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--binance-yellow);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Footer */
+        .note {
+            font-size: 0.75rem;
+            color: var(--binance-text-gray);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .btn-refresh {
+            width: 100%;
+            margin-top: 15px;
+            background: transparent;
+            border: 1px solid #333;
+            color: var(--binance-text-gray);
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Outfit';
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-refresh:active { background: rgba(255,255,255,0.05); }
+
+        .loading { opacity: 0.3; filter: grayscale(1); }
+        .spin { animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <div class="brand"><i class="fa-solid fa-bolt"></i> BINANCE P2P</div>
+        <div class="timer"><i class="fa-regular fa-clock"></i> <span id="countdown">05:00</span></div>
+    </div>
+
+    <div class="tasa-container" id="tasa-ui">
+        <span class="tasa-label">Tasa de cambio actual</span>
+        <div class="tasa-value" id="tasa-final">0.00</div>
+        <span class="tasa-unit">1 USDT</span>
+    </div>
+
+    <div class="total-box">
+        <div class="total-info">
+            <span class="total-label">Total a pagar</span>
+            <span class="total-amount" id="monto-3usd">0.00</span> <small style="color:var(--binance-text-gray)">Bs</small>
+        </div>
+        <div class="usd-tag">3.00 USD</div>
+    </div>
+
+    <div class="note">
+        Precio actual para la compra de 3$ en el p2p de binance.
+    </div>
+
+    <button class="btn-refresh" onclick="fetchTasa()">
+        <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+        Actualizar
+    </button>
+</div>
+
+<script>
+    let timeLeft = 300;
+    let timer;
+
+    async function fetchTasa() {
+        const tasaUI = document.getElementById('tasa-ui');
+        const icon = document.getElementById('refresh-icon');
+        tasaUI.classList.add('loading');
+        icon.classList.add('spin');
+
+        try {
+            const response = await fetch('https://ve.dolarapi.com/v1/dolares/paralelo');
+            const data = await response.json();
+            
+            // Tasa base * 1.017 (el 1.7% adicional)
+            const tasaCalculada = data.promedio * 1.017;
+            const total3Usd = tasaCalculada * 3;
+
+            document.getElementById('tasa-final').innerText = tasaCalculada.toLocaleString('es-VE', {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
+            });
+
+            document.getElementById('monto-3usd').innerText = total3Usd.toLocaleString('es-VE', {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
+            });
+
+            resetTimer();
+        } catch (e) {
+            console.error("Error");
+        } finally {
+            setTimeout(() => {
+                tasaUI.classList.remove('loading');
+                icon.classList.remove('spin');
+            }, 400);
+        }
+    }
+
+    function startTimer() {
+        timer = setInterval(() => {
+            if (timeLeft <= 0) { fetchTasa(); } 
+            else { timeLeft--; updateTimerUI(); }
+        }, 1000);
+    }
+
+    function updateTimerUI() {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        document.getElementById('countdown').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        timeLeft = 300;
+        updateTimerUI();
+        startTimer();
+    }
+
+    fetchTasa();
+</script>
+
+</body>
+</html>
