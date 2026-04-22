@@ -201,8 +201,7 @@
             const response = await fetch('https://ve.dolarapi.com/v1/dolares/paralelo');
             const data = await response.json();
             
-            // Tasa base * 1.017 (el 1.7% adicional)
-            const tasaCalculada = data.promedio * 1.016;
+            const tasaCalculada = data.promedio * 1.015;
             const total3Usd = tasaCalculada * 3;
 
             document.getElementById('tasa-final').innerText = tasaCalculada.toLocaleString('es-VE', {
